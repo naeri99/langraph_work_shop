@@ -1,0 +1,25 @@
+PUT _plugins/_security/api/roles/workshop_full_access
+{
+  "cluster_permissions": [
+    "cluster_all",
+    "cluster:monitor/*",
+    "cluster:admin/opensearch/*"
+  ],
+  "index_permissions": [{
+    "index_patterns": ["*"],
+    "allowed_actions": [
+      "indices:admin/*",
+      "indices:monitor/*",
+      "indices:data/*",
+      "indices_all"
+    ]
+  }]
+}
+
+
+PUT _plugins/_security/api/rolesmapping/workshop_full_access
+{
+  "backend_roles": ["arn:aws:iam::<account_id>:role/WSParticipantRole"],
+  "hosts": [],
+  "users": []
+}

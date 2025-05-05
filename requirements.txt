@@ -1,0 +1,15 @@
+langchain-aws
+langchain-community
+boto3
+opensearch-py
+faiss-cpu
+PyPDF2
+pydantic
+langchain-experimental
+PyMuPDF
+pypdf
+langsmith
+pandas
+transformers
+langgraph
+graphviz
