@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation template for creating a DynamoDB table for chat message history'
+
+Resources:
+  ChatMessageHistoryTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ChatMessageHistory
+      BillingMode: PAY_PER_REQUEST  # On-demand capacity mode
+      AttributeDefinitions:
+        - AttributeName: session_id
+          AttributeType: S
+        - AttributeName: message_id
+          AttributeType: S  # Changed from S to N for Number (integer)
+      KeySchema:
+        - AttributeName: session_id
+          KeyType: HASH  # Partition key
+        - AttributeName: message_id
+          KeyType: RANGE  # Sort key
+      Tags:
+        - Key: Application
+          Value: ChatBot
+
+Outputs:
+  TableName:
+    Description: Name of the DynamoDB table
+    Value: !Ref ChatMessageHistoryTable
+  TableArn:
+    Description: ARN of the DynamoDB table
+    Value: !GetAtt ChatMessageHistoryTable.Arn

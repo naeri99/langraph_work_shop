@@ -1,0 +1,108 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation template for EC2 with JupyterLab Docker and IAM role'
+
+Resources:
+  # IAM Role
+  WorkshopRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: WorkshopRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonBedrockFullAccess
+        - arn:aws:iam::aws:policy/AmazonOpenSearchServiceFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+
+
+  # Instance Profile
+  WorkshopInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: WorkshopInstanceProfile
+      Roles:
+        - !Ref WorkshopRole
+
+  # Security Group
+  WorkshopSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Workshop EC2 instance
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8888
+          ToPort: 8888
+          CidrIp: 0.0.0.0/0
+
+  # EC2 Instance
+  WorkshopInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: c5.large
+      ImageId: ami-0f605570d05d73472  # Amazon Linux 2023 AMI (update for your region)
+      SecurityGroupIds:
+        - !Ref WorkshopSecurityGroup
+      IamInstanceProfile: !Ref WorkshopInstanceProfile
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 40
+            VolumeType: gp3
+            DeleteOnTermination: true
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+
+          # Update the system
+          echo "1234" | sudo passwd --stdin ec2-user
+          sudo dnf update -y
+
+          # Install Docker
+          sudo dnf install -y docker
+
+          # Start Docker service
+          sudo systemctl start docker
+          sudo systemctl enable docker
+
+          # Add ec2-user to docker group
+          sudo usermod -a -G docker ec2-user
+
+          # Change Docker socket permissions (use with caution)
+          sudo chmod 777 /var/run/docker.sock
+
+          # Run JupyterLab container
+          docker run -d -p 8888:8888 bumory1987/jupytelab:0.2
+      Tags:
+        - Key: Name
+          Value: Workshop-Instance
+
+Outputs:
+  InstanceId:
+    Description: ID of the EC2 instance
+    Value: !Ref WorkshopInstance
+
+  PublicDNS:
+    Description: Public DNS of the EC2 instance
+    Value: !GetAtt WorkshopInstance.PublicDnsName
+
+  JupyterLabURL:
+    Description: URL for JupyterLab
+    Value: !Sub http://${WorkshopInstance.PublicDnsName}:8888
+
+  SSHCommand:
+    Description: SSH command to connect to the instance
+    Value: !Sub ssh ec2-user@${WorkshopInstance.PublicDnsName}
+
+  RoleArn:
+    Description: ARN of the IAM Role
+    Value: !GetAtt WorkshopRole.Arn

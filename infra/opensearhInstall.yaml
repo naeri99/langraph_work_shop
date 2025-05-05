@@ -1,0 +1,106 @@
+Parameters:
+  DomainName:
+    Type: String
+    Description: "Name of the OpenSearch domain"
+    Default: "bnk-opensearch-domain"
+
+  BNKuser:
+    Type: String
+    Description: "Master username for OpenSearch domain"
+    MinLength: 1
+    Default: "Bnkadmin"
+    
+  BNKpassword:
+    Type: String
+    Description: "Master password for OpenSearch domain"
+    MinLength: 8
+    NoEcho: true
+    ConstraintDescription: "Password must be at least 8 characters long"
+    Default: "Bnkadmin123!"
+
+Resources:
+  WorkshopParticipantPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: WorkshopFullAccessPolicy
+      Roles: 
+        - "WSParticipantRole"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "es:*"
+              - "aoss:*"
+              - "opensearch:*"
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - "sagemaker:*"
+              - "sagemaker-runtime:*"
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - "s3:GetObject"
+              - "s3:PutObject"
+              - "s3:DeleteObject"
+              - "s3:ListBucket"
+              - "s3:GetBucketLocation"
+              - "s3:ListAllMyBuckets"
+            Resource:
+              - "arn:aws:s3:::*"
+              - "arn:aws:s3:::*/*"
+
+  OpenSearchDomain:
+    Type: AWS::OpenSearchService::Domain
+    Properties:
+      DomainName: !Ref DomainName
+      EngineVersion: OpenSearch_2.17
+      ClusterConfig:
+        InstanceType: m5.2xlarge.search
+        InstanceCount: 2
+        ZoneAwarenessEnabled: true
+        ZoneAwarenessConfig:
+          AvailabilityZoneCount: 2
+      EBSOptions:
+        EBSEnabled: true
+        VolumeType: gp3
+        VolumeSize: 20
+      EncryptionAtRestOptions:
+        Enabled: true
+      NodeToNodeEncryptionOptions:
+        Enabled: true
+      DomainEndpointOptions:
+        EnforceHTTPS: true
+      AdvancedOptions:
+        override_main_response_version: "true"
+        rest.action.multi.allow_explicit_index: "true"
+      AdvancedSecurityOptions:
+        Enabled: true
+        InternalUserDatabaseEnabled: true
+        MasterUserOptions:
+          MasterUserName: !Ref BNKuser
+          MasterUserPassword: !Ref BNKpassword
+      AccessPolicies:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:role/WSParticipantRole"
+            Action: "es:*"
+            Resource: !Sub "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${DomainName}/*"
+          - Effect: Allow
+            Principal:
+              AWS: "*"
+            Action: "es:ESHttp*"
+            Resource: !Sub "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${DomainName}/*"
+
+
+Outputs:
+  DomainEndpoint:
+    Description: "Domain endpoint for the OpenSearch cluster"
+    Value: !GetAtt OpenSearchDomain.DomainEndpoint
+    
+  DashboardsURL:
+    Description: "URL for OpenSearch Dashboards"
+    Value: !Sub "https://${OpenSearchDomain.DomainEndpoint}/_dashboards/"
