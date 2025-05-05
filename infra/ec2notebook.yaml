@@ -49,7 +49,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: c5.large
-      ImageId: ami-0f605570d05d73472  # Amazon Linux 2023 AMI (update for your region)
+      ImageId: ami-0f88e80871fd81e91  # Amazon Linux 2023 AMI (update for your region)
       SecurityGroupIds:
         - !Ref WorkshopSecurityGroup
       IamInstanceProfile: !Ref WorkshopInstanceProfile
