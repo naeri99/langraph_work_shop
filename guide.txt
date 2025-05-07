@@ -1,7 +1,9 @@
 1. pip install streamlit
 
-2. curl 'https://ws-assets-prod-iad-r-icn-ced060f0d38bc0b0.s3.ap-northeast-2.amazonaws.com/10435111-3e2e-48bb-acb4-0b5111d7638e/workshop.zip' --output workshop.zip
-3. unzip workshop.zip
+2.pip install chromadb
 
-4. region_name = "us-east-1"
+3. curl 'https://ws-assets-prod-iad-r-icn-ced060f0d38bc0b0.s3.ap-northeast-2.amazonaws.com/10435111-3e2e-48bb-acb4-0b5111d7638e/workshop.zip' --output workshop.zip
+4. unzip workshop.zip
+
+5. region_name = "us-east-1"
 
