@@ -2,13 +2,13 @@ Parameters:
   DomainName:
     Type: String
     Description: "Name of the OpenSearch domain"
-    Default: "bnk-opensearch-domain"
+    Default: "bank-opensearch-domain"
 
   BNKuser:
     Type: String
     Description: "Master username for OpenSearch domain"
     MinLength: 1
-    Default: "Bnkadmin"
+    Default: "Bankadmin"
     
   BNKpassword:
     Type: String
@@ -16,7 +16,7 @@ Parameters:
     MinLength: 8
     NoEcho: true
     ConstraintDescription: "Password must be at least 8 characters long"
-    Default: "Bnkadmin123!"
+    Default: "Bankadmin123!"
 
 Resources:
   WorkshopParticipantPolicy:
